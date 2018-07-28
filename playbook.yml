@@ -7,28 +7,34 @@
     yum: name=* state=latest update_cache=yes
     when: ansible_distribution == "CentOS"
 
+  - name: set facts
+    set_fact:
+      translated_architecture: amd64
+    when: ansible_architecture == 'x86_64'
 
   - name: 2. Install wget Tools
     yum: name={{item}} state=installed
     with_items:
           - curl
           - wget
-
+  # Add kubectl repository
   - name: 3. Installed kubectl Repository
     shell: "{{item}}"
     with_items:
           - curl -LO https://storage.googleapis.com/kubernetes-release/release/$(curl -s https://storage.googleapis.com/kubernetes-release/release/stable.txt)/bin/linux/amd64/kubectl
           - chmod +x ./kubectl
           - mv ./kubectl /usr/local/bin/kubectl
-
+          - ln -s /usr/local/bin/kubectl /usr/bin/kubectl
+  # Install Bash Completion
   - name: 4. Install Bash-completion
     yum: name=bash-completion styate=installed
-
+  # Add Minikube Repository
   - name: 5. Intall Minikube Repository
     command: "{{item}}"
     with_items:
       - wget -O /etc/yum.repos.d/antonpatsev-minikube-rpm-epel-7.repo https://copr.fedorainfracloud.org/coprs/antonpatsev/minikube-rpm/repo/epel-7/antonpatsev-minikube-rpm-epel-7.repo
       - yum clean all
+  # Install Required Packages
   - name: 6. install the required packages
     package:
       name: "{{ item }}"
@@ -43,7 +49,7 @@
       - libvirt-daemon-system
       - libvirt-daemon-kvm
       - dnsmasq
-
+  # Install Firewalld & Libvirtd Services
   - name: 7. start services
     service:
       name: "{{ item }}"
@@ -52,16 +58,18 @@
     with_items:
       - firewalld
       - libvirtd
-
+  # INstall Minikube From Yum Repository
   - name: 8. Install Minikube From Yum Repository
     yum:  name=minikube  state=installed
-
+  # STart Minikube Service
   - name: 9. Started Minikube
-    shell: "minikube start"
+    shell: "{{item}}"
+    with_items:
+      - ln -s /usr/local/bin/minikube /usr/bin/minikube
+      - minikube start
     notify: minikube start
 
-
-
+  # Run an Nginx Pod  To test
   - name: 10. Running Test Nginx Test Pod
     command: "{{item}}"
     with_items:
