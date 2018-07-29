@@ -41,7 +41,6 @@
        - curl -LO https://storage.googleapis.com/kubernetes-release/release/$(curl -s https://storage.googleapis.com/kubernetes-release/release/stable.txt)/bin/linux/amd64/kubectl
        - chmod +x ./kubectl
        - mv ./kubectl /usr/local/bin/kubectl
-    notify: kubectl version -o json
 
   # Add Docker-ce Repository
   - name: 7. Install Utility Packages
@@ -78,7 +77,6 @@
     with_items:
        - wget https://storage.googleapis.com/minikube/releases/latest/minikube-linux-amd64 -O  /usr/local/bin/minikube
        - chmod +x /usr/local/bin/minikube
-    notify: minikube version
 
   # Install Docker Machine KVM driver
   - name: 12. Intall Minikube Repository
@@ -99,3 +97,9 @@
     with_items:
        - kubectl cluster-info
        - kubectl config view
+  # Enable Kubernetes Dashboard
+  - name: 15. Enabling Dashboard
+    command: "{{ item }}"
+    with_items:
+       - minikube addons list
+       - minikube dashboard --url
