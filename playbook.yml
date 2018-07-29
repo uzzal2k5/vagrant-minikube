@@ -85,6 +85,8 @@
        - curl -LO https://storage.googleapis.com/minikube/releases/latest/docker-machine-driver-kvm2
        - chmod +x docker-machine-driver-kvm2
        - mv docker-machine-driver-kvm2 /usr/local/bin/
+       - cp /usr/local/bin/docker-machine-driver-kvm2 /usr/local/bin/
+       - which docker-machine-driver-kvm2
   # Start Minikube with vm-driver
   - name: 13. Starting Minikube & Testing
     command: "{{item}}"
