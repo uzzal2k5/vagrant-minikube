@@ -39,8 +39,7 @@
     package:
       name: "{{ item }}"
       state: latest
-    with_items: "{{ minikube_dependencies }}"
-    minikube_dependencies:
+    with_items:
       - python-lxml
       - python-libvirt
       - qemu-kvm
