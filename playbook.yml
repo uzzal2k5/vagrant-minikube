@@ -65,9 +65,9 @@
   - name: 10. start services
     service:
        name: "{{ item }}"
-         state: restarted
-         enabled: yes
-       with_items:
+       state: restarted
+       enabled: yes
+    with_items:
          - firewalld
          - libvirtd
          - docker
