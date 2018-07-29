@@ -11,12 +11,6 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |vmConfig|
   end
   vmConfig.vm.box_check_update = false
 
-  # Public Network
-  vmConfig.vm.network :public_network,
-        :dev => 'virbr0',
-        :mode => 'bridge',
-        :type => 'bridge'
-
   # Private network with ipv6 support
   vmConfig.vm.network "private_network",
         :ip => "192.168.33.10",
