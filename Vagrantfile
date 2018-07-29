@@ -23,7 +23,7 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |vmConfig|
         :libvirt__guest_ipv6 => "yes",
         :libvirt__ipv6_address => "2001:db8:ca2:6::1",
         :libvirt__ipv6_prefix => "64",
-        :libvirt__domain_name => "minikube.local"
+        :libvirt__domain_name => "minikube"
 
   # Resource Allocation
   vmConfig.vm.provider :libvirt do |libvirt|
