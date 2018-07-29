@@ -99,9 +99,3 @@
     with_items:
        - kubectl cluster-info
        - kubectl config view
-
-  # Run an Nginx Pod  To test
-  - name: 15. Running Test Nginx Test Pod
-    command: "{{item}}"
-    with_items:
-       - kubectl run test-nginx --image=nginx --replicas=2 --port=80
