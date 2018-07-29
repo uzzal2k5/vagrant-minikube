@@ -1,0 +1,73 @@
+y- hosts: all
+  become: yes
+  remote_user: root
+
+  tasks:
+  - name: 1. install system updates for centos systems
+    yum: name=* state=latest update_cache=yes
+    when: ansible_distribution == "CentOS"
+  # Setting OS Facts
+  - name: 2. set facts
+    set_fact:
+      translated_architecture: amd64
+    when: ansible_architecture == 'x86_64'
+
+  # Install Require tools
+  - name: 3. Install wget Tools
+    yum: name={{item}} state=installed
+    with_items:
+          - curl
+          - wget
+  # Add kubectl repository
+  - name: 4. Installed kubectl Repository
+    shell: "{{item}}"
+    with_items:
+          - curl -LO https://storage.googleapis.com/kubernetes-release/release/$(curl -s https://storage.googleapis.com/kubernetes-release/release/stable.txt)/bin/linux/amd64/kubectl
+          - chmod +x ./kubectl
+          - mv ./kubectl /usr/local/bin/kubectl
+  # Install Bash Completion
+  - name: 5. Install Bash-completion
+    yum: name=bash-completion state=installed
+  # Add Minikube Repository
+  - name: 6. Intall Minikube Repository
+    command: "{{item}}"
+    with_items:
+      - wget -O /etc/yum.repos.d/antonpatsev-minikube-rpm-epel-7.repo https://copr.fedorainfracloud.org/coprs/antonpatsev/minikube-rpm/repo/epel-7/antonpatsev-minikube-rpm-epel-7.repo
+      - yum clean all
+  # Install Required Packages
+  - name: 7. install the required packages
+    package:
+      name: "{{ item }}"
+      state: latest
+    with_items:
+      - python-lxml
+      - qemu-kvm
+      - firewalld
+      - libvirt
+      - libvirt-daemon-kvm
+      - dnsmasq
+  # Install Firewalld & Libvirtd Services
+  - name: 8. start services
+    service:
+      name: "{{ item }}"
+      state: restarted
+      enabled: yes
+    with_items:
+      - firewalld
+      - libvirtd
+  # INstall Minikube From Yum Repository
+  - name: 8. Install Minikube From Yum Repository
+    yum:  name=minikube  state=installed
+  # STart Minikube Service
+  - name: 10. Started Minikube
+    shell: "{{item}}"
+    with_items:
+      - ln -s /usr/local/bin/minikube /usr/bin/minikube
+      - minikube start
+    notify: minikube start
+
+  # Run an Nginx Pod  To test
+  - name: 11. Running Test Nginx Test Pod
+    command: "{{item}}"
+    with_items:
+          - kubectl run test-nginx --image=nginx --replicas=2 --port=80

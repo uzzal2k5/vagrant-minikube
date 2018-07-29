@@ -6,70 +6,102 @@
   - name: 1. install system updates for centos systems
     yum: name=* state=latest update_cache=yes
     when: ansible_distribution == "CentOS"
-
-  - name: set facts
+  # Setting OS Facts
+  - name: 2. set facts
     set_fact:
       translated_architecture: amd64
     when: ansible_architecture == 'x86_64'
 
-  - name: 2. Install wget Tools
+  # Install Require tools
+  - name: 3. Install wget Tools
     yum: name={{item}} state=installed
     with_items:
-          - curl
-          - wget
-  # Add kubectl repository
-  - name: 3. Installed kubectl Repository
-    shell: "{{item}}"
-    with_items:
-          - curl -LO https://storage.googleapis.com/kubernetes-release/release/$(curl -s https://storage.googleapis.com/kubernetes-release/release/stable.txt)/bin/linux/amd64/kubectl
-          - chmod +x ./kubectl
-          - mv ./kubectl /usr/local/bin/kubectl
-          - ln -s /usr/local/bin/kubectl /usr/bin/kubectl
+       - curl
+       - wget
   # Install Bash Completion
   - name: 4. Install Bash-completion
     yum: name=bash-completion state=installed
-  # Add Minikube Repository
-  - name: 5. Intall Minikube Repository
-    command: "{{item}}"
-    with_items:
-      - wget -O /etc/yum.repos.d/antonpatsev-minikube-rpm-epel-7.repo https://copr.fedorainfracloud.org/coprs/antonpatsev/minikube-rpm/repo/epel-7/antonpatsev-minikube-rpm-epel-7.repo
-      - yum clean all
+
   # Install Required Packages
-  - name: 6. install the required packages
+  - name: 5. install the required packages
     package:
       name: "{{ item }}"
       state: latest
     with_items:
       - python-lxml
-      - python-libvirt
       - qemu-kvm
       - firewalld
       - libvirt
-      - libvirt-daemon-system
       - libvirt-daemon-kvm
       - dnsmasq
-  # Install Firewalld & Libvirtd Services
-  - name: 7. start services
-    service:
-      name: "{{ item }}"
-      state: restarted
-      enabled: yes
-    with_items:
-      - firewalld
-      - libvirtd
-  # INstall Minikube From Yum Repository
-  - name: 8. Install Minikube From Yum Repository
-    yum:  name=minikube  state=installed
-  # STart Minikube Service
-  - name: 9. Started Minikube
+  # Add kubectl repository
+  - name: 6. Installed kubectl Repository
     shell: "{{item}}"
     with_items:
-      - ln -s /usr/local/bin/minikube /usr/bin/minikube
-      - minikube start
-    notify: minikube start
+       - curl -LO https://storage.googleapis.com/kubernetes-release/release/$(curl -s https://storage.googleapis.com/kubernetes-release/release/stable.txt)/bin/linux/amd64/kubectl
+       - chmod +x ./kubectl
+       - mv ./kubectl /usr/local/bin/kubectl
+    notify: kubectl version -o json
 
-  # Run an Nginx Pod  To test
-  - name: 10. Running Test Nginx Test Pod
+  # Add Docker-ce Repository
+  - name: 7. Install Utility Packages
+    package:
+       name: "{{ item }}"
+       state: latest
+    with_items:
+       - yum-utils
+       - device-mapper-persistent-data
+       - lvm2
+  # Adding Docker Repository
+  - name: 8. Docker Repository Add
     command: "{{item}}"
     with_items:
-          - kubectl run test-nginx --image=nginx --replicas=2 --port=80
+       - wget -O /etc/yum.repos.d/docker-ce.repo https://download.docker.com/linux/centos/docker-ce.repo
+       - yum clean all
+  # Install Docker CE
+  - name: 9. Installing Docker-CE
+    yum: name=docker-ce state=installed
+  # Install Firewalld & Libvirtd Services
+  - name: 10. start services
+    service:
+       name: "{{ item }}"
+         state: restarted
+         enabled: yes
+       with_items:
+         - firewalld
+         - libvirtd
+         - docker
+
+  # Add Minikube Repository
+  - name: 11. Intall Minikube Repository
+    command: "{{item}}"
+    with_items:
+       - wget https://storage.googleapis.com/minikube/releases/latest/minikube-linux-amd64 -O  /usr/local/bin/minikube
+       - chmod +x /usr/local/bin/minikube
+    notify: minikube version
+
+  # Install Docker Machine KVM driver
+  - name: 12. Intall Minikube Repository
+    command: "{{item}}"
+    with_items:
+       - curl -LO https://storage.googleapis.com/minikube/releases/latest/docker-machine-driver-kvm2
+       - chmod +x docker-machine-driver-kvm2
+       - mv docker-machine-driver-kvm2 /usr/local/bin/
+  # Start Minikube with vm-driver
+  - name: 13. Starting Minikube & Testing
+    command: "{{item}}"
+    with_items:
+       - minikube start --vm-driver kvm2
+       - virsh list
+  # Checking Cluster Info
+  - name: 14. Check Cluster info & view Config
+    command: "{{item}}"
+    with_items:
+       - kubectl cluster-info
+       - kubectl config view
+
+  # Run an Nginx Pod  To test
+  - name: 15. Running Test Nginx Test Pod
+    command: "{{item}}"
+    with_items:
+       - kubectl run test-nginx --image=nginx --replicas=2 --port=80
