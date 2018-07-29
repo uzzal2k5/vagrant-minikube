@@ -27,7 +27,7 @@
           - ln -s /usr/local/bin/kubectl /usr/bin/kubectl
   # Install Bash Completion
   - name: 4. Install Bash-completion
-    yum: name=bash-completion styate=installed
+    yum: name=bash-completion state=installed
   # Add Minikube Repository
   - name: 5. Intall Minikube Repository
     command: "{{item}}"
