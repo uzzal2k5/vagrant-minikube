@@ -27,12 +27,15 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |vmConfig|
 
   # Resource Allocation
   vmConfig.vm.provider :libvirt do |libvirt|
+        libvirt.driver = 'kvm'
         libvirt.cpus = 4
         libvirt.cputopology :sockets => '2',
             :cores => '2',
             :threads => '1'
         libvirt.memory = '4096'
-        libvirt.nested = 'true'
+        libvirt.cpu_feature :name => 'vmx',
+            :policy => 'require'
+
 
   end
   vmConfig.vm.provision :ansible do |ansible|

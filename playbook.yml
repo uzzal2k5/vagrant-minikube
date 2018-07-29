@@ -1,6 +1,6 @@
 - hosts: all
   become: yes
-  become_method: root
+  remote_user: root
 
   tasks:
   - name: 1. install system updates for centos systems
